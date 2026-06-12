@@ -12,7 +12,7 @@ class GoalProvider extends ChangeNotifier {
 
   GoalSettings _settings = GoalSettings.defaults();
   Map<String, DayEntry> _dayData = {};
-  bool _isDarkMode = false;
+  bool _isDarkMode = true;
   bool _isLoading = true;
 
   GoalSettings get settings => _settings;

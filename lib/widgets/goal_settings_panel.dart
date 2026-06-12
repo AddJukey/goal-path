@@ -132,7 +132,7 @@ class _GoalSettingsPanelState extends State<GoalSettingsPanel> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
+                  color: AppColors.mint,
                   borderRadius: BorderRadius.circular(40),
                 ),
                 child: Text(

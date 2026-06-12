@@ -24,136 +24,107 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<GoalProvider>(
       builder: (context, provider, _) {
-        if (provider.isLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
         final calculator = provider.calculator;
         final stats = calculator.totalStats;
         final numberFormat = NumberFormat.decimalPattern('ru');
+        final progress = calculator.settings.targetAmount > 0
+            ? (stats.totalAmount / calculator.settings.targetAmount)
+                .clamp(0.0, 1.0)
+            : 0.0;
 
-        return Scaffold(
-          body: SafeArea(
-            child: RefreshIndicator(
-              onRefresh: () async => provider.init(),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _Header(
-                    title: provider.settings.title,
-                    isDark: provider.isDarkMode,
-                    onToggleTheme: provider.toggleDarkMode,
-                  ),
-                  const SizedBox(height: 16),
-                  GoalSettingsPanel(
-                    settings: provider.settings,
-                    calculator: calculator,
-                    onChanged: provider.updateSettings,
-                  ),
-                  const SizedBox(height: 16),
-                  QuickAddPanel(onAdd: provider.addShiftToday),
-                  const SizedBox(height: 16),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.6,
-                    children: [
-                      StatCard(
-                        label: '💰 ВСЕГО ЗАРАБОТАНО',
-                        value: '${numberFormat.format(stats.totalAmount.floor())}₽',
-                      ),
-                      StatCard(
-                        label: '🎯 ОСТАЛОСЬ ДО ЦЕЛИ',
-                        value:
-                            '${numberFormat.format(calculator.remainingTarget.floor())}₽',
-                      ),
-                      StatCard(
-                        label: '⏱️ ВСЕГО ЧАСОВ',
-                        value: stats.totalHours.toStringAsFixed(1),
-                      ),
-                      StatCard(
-                        label: '💰 СРЕДНЯЯ СТАВКА',
-                        value: '${stats.avgRate.toStringAsFixed(0)} ₽/ч',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ProgressSection(calculator: calculator),
-                  const SizedBox(height: 16),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            '💡 Совет дня',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent,
-                              borderRadius: BorderRadius.circular(60),
-                            ),
-                            child: Text(
-                              calculator.generateAdvice(),
-                              style: const TextStyle(
-                                fontStyle: FontStyle.italic,
-                                color: Color(0xFF1E2A3E),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+        return SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () async => provider.init(),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              children: [
+                _Header(
+                  title: provider.settings.title,
+                  isDark: provider.isDarkMode,
+                  onToggleTheme: provider.toggleDarkMode,
+                ),
+                const SizedBox(height: 12),
+                _GoalHero(
+                  title: provider.settings.title,
+                  progress: progress,
+                  earned: stats.totalAmount,
+                  target: calculator.settings.targetAmount,
+                  remaining: calculator.remainingTarget,
+                ),
+                const SizedBox(height: 16),
+                QuickAddPanel(onAdd: provider.addShiftToday),
+                const SizedBox(height: 16),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 1.55,
+                  children: [
+                    StatCard(
+                      label: 'Заработано',
+                      value:
+                          '${numberFormat.format(stats.totalAmount.floor())}₽',
+                      accent: AppColors.mint,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  DayList(
-                    calculator: calculator,
-                    onDayChanged: (date, entry) =>
-                        provider.setDayData(date, entry),
-                    onDayCleared: provider.clearDay,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: () => _confirmClearAll(context, provider),
-                        icon: const Icon(Icons.delete_outline),
-                        label: const Text('Сбросить'),
+                    StatCard(
+                      label: 'До цели',
+                      value:
+                          '${numberFormat.format(calculator.remainingTarget.floor())}₽',
+                      accent: AppColors.purple,
+                    ),
+                    StatCard(
+                      label: 'Часов',
+                      value: stats.totalHours.toStringAsFixed(1),
+                      accent: AppColors.blue,
+                    ),
+                    StatCard(
+                      label: 'Ставка',
+                      value: '${stats.avgRate.toStringAsFixed(0)} ₽/ч',
+                      accent: AppColors.mintDark,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GoalSettingsPanel(
+                  settings: provider.settings,
+                  calculator: calculator,
+                  onChanged: provider.updateSettings,
+                ),
+                const SizedBox(height: 16),
+                ProgressSection(calculator: calculator),
+                const SizedBox(height: 16),
+                _AdviceCard(text: calculator.generateAdvice()),
+                const SizedBox(height: 16),
+                DayList(
+                  calculator: calculator,
+                  onDayChanged: (date, entry) =>
+                      provider.setDayData(date, entry),
+                  onDayCleared: provider.clearDay,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () => _confirmClearAll(context, provider),
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      label: const Text('Сбросить'),
+                    ),
+                    const SizedBox(width: 10),
+                    FilledButton.icon(
+                      onPressed: () => _exportCsv(calculator),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.mint,
+                        foregroundColor: const Color(0xFF0A0A0F),
                       ),
-                      const SizedBox(width: 12),
-                      FilledButton.icon(
-                        onPressed: () => _exportCsv(calculator),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          foregroundColor: const Color(0xFF1E2A3E),
-                        ),
-                        icon: const Icon(Icons.share),
-                        label: const Text('Экспорт CSV'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Вводи часы и сумму за каждый день. Прогнозы используют твою реальную эффективность.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ],
-              ),
+                      icon: const Icon(Icons.share, size: 18),
+                      label: const Text('Экспорт'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         );
@@ -191,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _exportCsv(GoalCalculator calculator) async {
     final csv = calculator.buildCsv();
     final fileName =
-        'goal_path_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
+        'plime_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
     await Share.share(csv, subject: fileName);
   }
 }
@@ -211,22 +182,196 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.mint, AppColors.blue],
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text(
+            'plime',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+              color: Color(0xFF0A0A0F),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
         Expanded(
           child: Text(
-            '🎯 $title',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.accent,
-            ),
+            'Сегодня',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontSize: 26,
+                ),
           ),
         ),
         IconButton(
           onPressed: onToggleTheme,
           icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-          tooltip: isDark ? 'Светлая тема' : 'Тёмная тема',
         ),
       ],
+    );
+  }
+}
+
+class _GoalHero extends StatelessWidget {
+  const _GoalHero({
+    required this.title,
+    required this.progress,
+    required this.earned,
+    required this.target,
+    required this.remaining,
+  });
+
+  final String title;
+  final double progress;
+  final double earned;
+  final double target;
+  final double remaining;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final numberFormat = NumberFormat.decimalPattern('ru');
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [const Color(0xFF1A2E2A), const Color(0xFF16161F)]
+              : [const Color(0xFFE0FDF8), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.mint.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 10,
+              backgroundColor: isDark
+                  ? AppColors.darkProgressBg
+                  : AppColors.lightProgressBg,
+              valueColor:
+                  const AlwaysStoppedAnimation(AppColors.mint),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${numberFormat.format(earned.floor())}₽',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  color: AppColors.mint,
+                ),
+              ),
+              Text(
+                '${(progress * 100).toStringAsFixed(0)}%',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+              Text(
+                '${numberFormat.format(target.floor())}₽',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+            ],
+          ),
+          if (remaining > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Осталось ${numberFormat.format(remaining.floor())}₽',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AdviceCard extends StatelessWidget {
+  const _AdviceCard({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.mint.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.lightbulb_outline,
+              color: AppColors.mint,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.35,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

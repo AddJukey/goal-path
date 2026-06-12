@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/goal_provider.dart';
-import 'screens/home_screen.dart';
+import 'screens/shell_screen.dart';
 import 'services/storage_service.dart';
 import 'theme/app_theme.dart';
 
@@ -66,7 +66,7 @@ class _GoalPathAppState extends State<GoalPathApp> {
           child: Consumer<GoalProvider>(
             builder: (context, provider, _) {
               return MaterialApp(
-                title: 'Путь к цели',
+                title: 'Plime',
                 debugShowCheckedModeBanner: false,
                 theme: AppTheme.light(),
                 darkTheme: AppTheme.dark(),
@@ -79,7 +79,7 @@ class _GoalPathAppState extends State<GoalPathApp> {
                   GlobalWidgetsLocalizations.delegate,
                   GlobalCupertinoLocalizations.delegate,
                 ],
-                home: const HomeScreen(),
+                home: const ShellScreen(),
               );
             },
           ),

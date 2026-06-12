@@ -80,8 +80,8 @@ class _QuickAddPanelState extends State<QuickAddPanel> {
                 FilledButton.icon(
                   onPressed: _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: const Color(0xFF1E2A3E),
+                    backgroundColor: AppColors.mint,
+                    foregroundColor: const Color(0xFF0A0A0F),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(40),
                     ),

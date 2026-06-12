@@ -33,7 +33,7 @@ class ProgressSection extends StatelessWidget {
                 value: percent,
                 minHeight: 24,
                 backgroundColor: progressBg,
-                valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+                valueColor: const AlwaysStoppedAnimation(AppColors.mint),
               ),
             ),
             const SizedBox(height: 12),

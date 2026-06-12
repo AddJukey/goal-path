@@ -40,7 +40,7 @@ class DayList extends StatelessWidget {
 
           return Container(
             color: isToday
-                ? AppColors.accent.withValues(alpha: 0.35)
+                ? AppColors.mint.withValues(alpha: 0.2)
                 : Colors.transparent,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Column(

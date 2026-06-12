@@ -40,35 +40,37 @@ jobs:
           fi
 
       - name: Build iOS release (no codesign)
-        run: |
-          flutter build ipa --release --no-codesign \
-            || flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign
 
       - name: Package sideloadable IPA
         run: |
-          APP_PATH=""
-          if [ -d "build/ios/archive/Runner.xcarchive/Product/Applications/Runner.app" ]; then
-            APP_PATH="build/ios/archive/Runner.xcarchive/Product/Applications/Runner.app"
-          elif [ -d "build/ios/iphoneos/Runner.app" ]; then
-            APP_PATH="build/ios/iphoneos/Runner.app"
-          else
-            APP_PATH="$(find build/ios -type d -name Runner.app | head -n 1)"
-          fi
+          set -euo pipefail
 
-          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
-            echo "Runner.app not found"
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Runner.app not found at $APP_PATH"
             find build/ios -maxdepth 5 -type d 2>/dev/null || true
             exit 1
           fi
 
+          echo "Validating Info.plist..."
+          plutil -lint "$APP_PATH/Info.plist"
+
           echo "Using app bundle: $APP_PATH"
+          rm -rf build/ios/sideload
           mkdir -p build/ios/sideload/Payload
-          cp -R "$APP_PATH" build/ios/sideload/Payload/
+          ditto "$APP_PATH" build/ios/sideload/Payload/Runner.app
+
+          plutil -lint build/ios/sideload/Payload/Runner.app/Info.plist
+
           mkdir -p build/ios/ipa
           (
             cd build/ios/sideload
-            zip -qry ../ipa/goal-path-unsigned.ipa Payload
+            zip -9yr ../ipa/goal-path-unsigned.ipa Payload
           )
+
+          echo "IPA contents:"
+          unzip -l build/ios/ipa/goal-path-unsigned.ipa | head -n 20
           ls -lh build/ios/ipa/
 
       - name: Upload IPA artifact

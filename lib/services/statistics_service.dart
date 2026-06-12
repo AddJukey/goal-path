@@ -88,6 +88,16 @@ class StatisticsService {
     return _buildReport(StatsPeriod.year, start, end, points, calculator);
   }
 
+  DayAchievement dayAchievement(GoalCalculator calculator, DateTime date) {
+    return _dayAchievement(calculator, date);
+  }
+
+  bool isDailyPlanMet(GoalCalculator calculator, DateTime date) {
+    final data = calculator.getDayData(date);
+    if (data.amount <= 0 && data.hours <= 0) return false;
+    return _dayAchievement(calculator, date).achievementPercent >= 100;
+  }
+
   DayAchievement _dayAchievement(GoalCalculator calculator, DateTime date) {
     final data = calculator.getDayData(date);
     final dailyTarget = _dailyTargetForDate(calculator, date);

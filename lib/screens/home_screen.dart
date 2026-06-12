@@ -9,14 +9,18 @@ import '../theme/app_theme.dart';
 import '../models/balance_segment.dart';
 import '../services/badge_service.dart';
 import '../services/balance_service.dart';
+import '../services/motivation_service.dart';
 import '../widgets/balance_ring_chart.dart';
 import '../widgets/calendar_strip.dart';
 import '../widgets/day_list.dart';
 import '../widgets/goal_settings_panel.dart';
+import '../widgets/goal_analogies_card.dart';
 import '../widgets/milestone_badges_row.dart';
 import '../widgets/progress_section.dart';
 import '../widgets/quick_add_panel.dart';
 import '../widgets/stat_card.dart';
+import '../widgets/streak_card.dart';
+import '../widgets/weekly_challenges_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -41,6 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
             : 0.0;
         final balance = BalanceService().compute(calculator);
         final badges = BadgeService().badges(calculator);
+        final motivation = MotivationService();
+        final shiftStreak = motivation.shiftStreak(calculator);
+        final planStreak = motivation.planStreak(calculator);
+        final challenges = motivation.weeklyChallenges(calculator);
+        final analogies = motivation.goalAnalogies(calculator);
         final selectedEntry = calculator.getDayData(_selectedDate);
 
         return SafeArea(
@@ -74,6 +83,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   target: calculator.settings.targetAmount,
                   remaining: calculator.remainingTarget,
                 ),
+                const SizedBox(height: 16),
+                StreakCard(
+                  shiftStreak: shiftStreak,
+                  planStreak: planStreak,
+                ),
+                const SizedBox(height: 12),
+                WeeklyChallengesCard(challenges: challenges),
+                const SizedBox(height: 12),
+                GoalAnalogiesCard(analogies: analogies),
                 const SizedBox(height: 16),
                 _BalanceCard(balance: balance),
                 const SizedBox(height: 16),

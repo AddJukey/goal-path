@@ -6,11 +6,16 @@ import '../models/period_stats.dart';
 import '../providers/goal_provider.dart';
 import '../services/badge_service.dart';
 import '../services/balance_service.dart';
+import '../services/insights_service.dart';
 import '../services/statistics_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/achievement_chart.dart';
 import '../widgets/balance_ring_chart.dart';
+import '../widgets/best_day_card.dart';
+import '../widgets/confidence_forecast_card.dart';
 import '../widgets/milestone_badges_row.dart';
+import '../widgets/period_comparison_card.dart';
+import '../widgets/what_if_simulator.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -22,6 +27,7 @@ class StatisticsScreen extends StatefulWidget {
 class _StatisticsScreenState extends State<StatisticsScreen> {
   StatsPeriod _period = StatsPeriod.month;
   final _stats = StatisticsService();
+  final _insights = InsightsService();
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +37,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         final report = _stats.report(calculator, _period);
         final balance = BalanceService().compute(calculator);
         final badges = BadgeService().badges(calculator);
+        final bestDay = _insights.bestDayOfWeek(calculator);
+        final forecast = _insights.confidenceForecast(calculator);
+        final comparison = _insights.monthComparison(calculator);
         final numberFormat = NumberFormat.decimalPattern('ru');
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -77,6 +86,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
             const SizedBox(height: 12),
             MilestoneBadgesRow(badges: badges),
+            const SizedBox(height: 16),
+            BestDayCard(insight: bestDay),
+            const SizedBox(height: 12),
+            ConfidenceForecastCard(forecast: forecast),
+            const SizedBox(height: 12),
+            WhatIfSimulator(calculator: calculator),
+            const SizedBox(height: 12),
+            PeriodComparisonCard(comparison: comparison),
             const SizedBox(height: 16),
             _HeroCard(
               title: 'Процент выполнения',

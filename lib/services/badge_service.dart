@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import '../models/milestone_badge.dart';
 import '../theme/app_theme.dart';
 import 'goal_calculator.dart';
+import 'motivation_service.dart';
 
 class BadgeService {
   List<MilestoneBadge> badges(GoalCalculator calculator) {
     final earned = calculator.totalStats.totalAmount;
     final hours = calculator.totalStats.totalHours;
-    final activeDays = calculator.dayData.values
-        .where((e) => e.amount > 0 || e.hours > 0)
-        .length;
+    final motivation = MotivationService();
+    final shiftStreakBest = motivation.shiftStreak(calculator).best;
 
     return [
       _badge(
@@ -61,11 +61,11 @@ class BadgeService {
       _badge(
         id: 'streak_7',
         title: '7 дней',
-        subtitle: '7 активных дней',
+        subtitle: 'Серия из 7 смен',
         threshold: 7,
         icon: Icons.local_fire_department_rounded,
         colors: [const Color(0xFFFB923C), const Color(0xFFEF4444)],
-        value: activeDays.toDouble(),
+        value: shiftStreakBest.toDouble(),
       ),
       _badge(
         id: 'goal_done',

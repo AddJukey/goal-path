@@ -169,7 +169,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         .fold<double>(0, (a, b) => a > b ? a : b);
 
     final points = report.points.map((p) {
-      final percent = maxAmount > 0 ? (p.amount / maxAmount) * 100 : 0;
+      final percent = maxAmount > 0 ? (p.amount / maxAmount) * 100 : 0.0;
       return DayAchievement(
         date: p.date,
         amount: p.amount,

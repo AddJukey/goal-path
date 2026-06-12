@@ -75,7 +75,9 @@ class GoalCalculator {
 
   double get remainingTarget {
     final total = totalStats.totalAmount;
-    return (settings.targetAmount - total).clamp(0, double.infinity);
+    return (settings.targetAmount - total)
+        .clamp(0.0, double.infinity)
+        .toDouble();
   }
 
   PeriodStats get last7DaysStats {

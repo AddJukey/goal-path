@@ -77,8 +77,8 @@ class StatisticsService {
           date: month,
           amount: amount,
           hours: hours,
-          dailyTarget: 0,
-          achievementPercent: dayCount > 0 ? percentSum / dayCount : 0,
+          dailyTarget: 0.0,
+          achievementPercent: dayCount > 0 ? percentSum / dayCount : 0.0,
         ),
       );
 
@@ -93,7 +93,7 @@ class StatisticsService {
     final dailyTarget = _dailyTargetForDate(calculator, date);
     final percent = dailyTarget > 0
         ? (data.amount / dailyTarget) * 100
-        : (data.amount > 0 ? 100 : 0);
+        : (data.amount > 0 ? 100.0 : 0.0);
 
     return DayAchievement(
       date: date,
@@ -110,7 +110,8 @@ class StatisticsService {
 
     final earnedBefore = _earnedBefore(calculator, date);
     final remaining = (calculator.settings.targetAmount - earnedBefore)
-        .clamp(0, double.infinity);
+        .clamp(0.0, double.infinity)
+        .toDouble();
 
     if (remaining <= 0) return 0;
 
@@ -143,13 +144,13 @@ class StatisticsService {
     final activeDays = points.where((p) => p.amount > 0 || p.hours > 0).length;
 
     final averagePercent = points.isEmpty
-        ? 0
+        ? 0.0
         : points.fold<double>(0, (sum, p) => sum + p.achievementPercent) /
             points.length;
 
     final target = calculator.settings.targetAmount;
     final goalSharePercent =
-        target > 0 ? (totalAmount / target) * 100 : 0;
+        target > 0 ? (totalAmount / target) * 100 : 0.0;
 
     return PeriodAchievementReport(
       period: period,

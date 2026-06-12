@@ -8,18 +8,22 @@ class BalanceService {
   GoalBalance compute(GoalCalculator calculator) {
     final target = calculator.settings.targetAmount;
     final earned = calculator.totalStats.totalAmount;
-    final earnedPercent =
-        target > 0 ? (earned / target * 100).clamp(0, 100) : 0;
+    final earnedPercent = target > 0
+        ? (earned / target * 100).clamp(0.0, 100.0).toDouble()
+        : 0.0;
 
     final monthReport =
         StatisticsService().report(calculator, StatsPeriod.month);
-    final pacePercent = monthReport.averagePercent.clamp(0, 100);
+    final pacePercent =
+        monthReport.averagePercent.clamp(0.0, 100.0).toDouble();
 
     final last7 = calculator.last7DaysStats;
     final expectedWeeklyHours = 42.0;
     final hoursPercent = last7.hours > 0
-        ? (last7.hours / expectedWeeklyHours * 100).clamp(0, 100)
-        : 0;
+        ? (last7.hours / expectedWeeklyHours * 100)
+            .clamp(0.0, 100.0)
+            .toDouble()
+        : 0.0;
 
     final segments = <BalanceSegment>[
       BalanceSegment(
@@ -48,7 +52,7 @@ class BalanceService {
         : active.fold<double>(0, (sum, s) => sum + s.percent) / active.length;
 
     return GoalBalance(
-      overallPercent: overall.clamp(0, 100),
+      overallPercent: overall.clamp(0.0, 100.0),
       segments: active,
     );
   }

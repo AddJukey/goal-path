@@ -4,9 +4,13 @@ import 'package:provider/provider.dart';
 
 import '../models/period_stats.dart';
 import '../providers/goal_provider.dart';
+import '../services/badge_service.dart';
+import '../services/balance_service.dart';
 import '../services/statistics_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/achievement_chart.dart';
+import '../widgets/balance_ring_chart.dart';
+import '../widgets/milestone_badges_row.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -23,7 +27,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget build(BuildContext context) {
     return Consumer<GoalProvider>(
       builder: (context, provider, _) {
-        final report = _stats.report(provider.calculator, _period);
+        final calculator = provider.calculator;
+        final report = _stats.report(calculator, _period);
+        final balance = BalanceService().compute(calculator);
+        final badges = BadgeService().badges(calculator);
         final numberFormat = NumberFormat.decimalPattern('ru');
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -41,6 +48,35 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               selected: _period,
               onChanged: (p) => setState(() => _period = p),
             ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Баланс цели',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  BalanceRingChart(
+                    segments: balance.segments,
+                    centerValue:
+                        '${balance.overallPercent.toStringAsFixed(0)}%',
+                    centerLabel: 'общий баланс',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            MilestoneBadgesRow(badges: badges),
             const SizedBox(height: 16),
             _HeroCard(
               title: 'Процент выполнения',

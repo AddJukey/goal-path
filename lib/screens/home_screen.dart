@@ -6,8 +6,14 @@ import 'package:share_plus/share_plus.dart';
 import '../providers/goal_provider.dart';
 import '../services/goal_calculator.dart';
 import '../theme/app_theme.dart';
+import '../models/balance_segment.dart';
+import '../services/badge_service.dart';
+import '../services/balance_service.dart';
+import '../widgets/balance_ring_chart.dart';
+import '../widgets/calendar_strip.dart';
 import '../widgets/day_list.dart';
 import '../widgets/goal_settings_panel.dart';
+import '../widgets/milestone_badges_row.dart';
 import '../widgets/progress_section.dart';
 import '../widgets/quick_add_panel.dart';
 import '../widgets/stat_card.dart';
@@ -20,6 +26,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  DateTime _selectedDate = GoalCalculator.dateOnly(DateTime.now());
+
   @override
   Widget build(BuildContext context) {
     return Consumer<GoalProvider>(
@@ -31,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ? (stats.totalAmount / calculator.settings.targetAmount)
                 .clamp(0.0, 1.0)
             : 0.0;
+        final balance = BalanceService().compute(calculator);
+        final badges = BadgeService().badges(calculator);
+        final selectedEntry = calculator.getDayData(_selectedDate);
 
         return SafeArea(
           child: RefreshIndicator(
@@ -44,6 +55,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   onToggleTheme: provider.toggleDarkMode,
                 ),
                 const SizedBox(height: 12),
+                CalendarStrip(
+                  calculator: calculator,
+                  selectedDate: _selectedDate,
+                  onDateSelected: (date) =>
+                      setState(() => _selectedDate = date),
+                ),
+                const SizedBox(height: 12),
+                DaySummaryCard(
+                  date: _selectedDate,
+                  entry: selectedEntry,
+                ),
+                const SizedBox(height: 16),
                 _GoalHero(
                   title: provider.settings.title,
                   progress: progress,
@@ -51,6 +74,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   target: calculator.settings.targetAmount,
                   remaining: calculator.remainingTarget,
                 ),
+                const SizedBox(height: 16),
+                _BalanceCard(balance: balance),
+                const SizedBox(height: 16),
+                MilestoneBadgesRow(badges: badges),
                 const SizedBox(height: 16),
                 QuickAddPanel(onAdd: provider.addShiftToday),
                 const SizedBox(height: 16),
@@ -319,6 +346,43 @@ class _GoalHero extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _BalanceCard extends StatelessWidget {
+  const _BalanceCard({required this.balance});
+
+  final GoalBalance balance;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Баланс цели',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
+          const SizedBox(height: 16),
+          BalanceRingChart(
+            segments: balance.segments,
+            centerValue: '${balance.overallPercent.toStringAsFixed(0)}%',
+            centerLabel: 'общий баланс',
+          ),
         ],
       ),
     );

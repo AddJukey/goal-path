@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/goal_provider.dart';
+import '../widgets/keyboard_toolbar.dart';
 import 'home_screen.dart';
 import 'statistics_screen.dart';
 
@@ -25,29 +26,31 @@ class _ShellScreenState extends State<ShellScreen> {
           );
         }
 
-        return Scaffold(
-          body: IndexedStack(
-            index: _index,
-            children: const [
-              HomeScreen(),
-              StatisticsScreen(),
-            ],
-          ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _index,
-            onDestinationSelected: (i) => setState(() => _index = i),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.today_outlined),
-                selectedIcon: Icon(Icons.today),
-                label: 'Сегодня',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.bar_chart_outlined),
-                selectedIcon: Icon(Icons.bar_chart),
-                label: 'Статистика',
-              ),
-            ],
+        return KeyboardToolbarOverlay(
+          child: Scaffold(
+            body: IndexedStack(
+              index: _index,
+              children: const [
+                HomeScreen(),
+                StatisticsScreen(),
+              ],
+            ),
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: _index,
+              onDestinationSelected: (i) => setState(() => _index = i),
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.today_outlined),
+                  selectedIcon: Icon(Icons.today),
+                  label: 'Сегодня',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.bar_chart_outlined),
+                  selectedIcon: Icon(Icons.bar_chart),
+                  label: 'Статистика',
+                ),
+              ],
+            ),
           ),
         );
       },

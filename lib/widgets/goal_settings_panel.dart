@@ -103,7 +103,10 @@ class _GoalSettingsPanelState extends State<GoalSettingsPanel> {
               label: '🎯 Название цели',
               child: TextField(
                 controller: _titleController,
+                textInputAction: TextInputAction.done,
                 onChanged: (_) => _emit(),
+                onTapOutside: (_) =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
                 decoration: const InputDecoration(isDense: true),
               ),
               width: 180,
@@ -113,8 +116,11 @@ class _GoalSettingsPanelState extends State<GoalSettingsPanel> {
               child: TextField(
                 controller: _targetController,
                 keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 onChanged: (_) => _emit(),
+                onTapOutside: (_) =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
                 decoration: const InputDecoration(isDense: true),
               ),
               width: 140,

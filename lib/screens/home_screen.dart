@@ -11,13 +11,13 @@ import '../services/badge_service.dart';
 import '../services/balance_service.dart';
 import '../services/motivation_service.dart';
 import '../widgets/balance_ring_chart.dart';
-import '../widgets/calendar_strip.dart';
-import '../widgets/day_list.dart';
+import '../widgets/day_editor_panel.dart';
 import '../widgets/goal_settings_panel.dart';
 import '../widgets/goal_analogies_card.dart';
+import '../widgets/keyboard_toolbar.dart';
 import '../widgets/milestone_badges_row.dart';
+import '../widgets/month_calendar.dart';
 import '../widgets/progress_section.dart';
-import '../widgets/quick_add_panel.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/streak_card.dart';
 import '../widgets/weekly_challenges_card.dart';
@@ -52,30 +52,41 @@ class _HomeScreenState extends State<HomeScreen> {
         final analogies = motivation.goalAnalogies(calculator);
         final selectedEntry = calculator.getDayData(_selectedDate);
 
-        return SafeArea(
-          child: RefreshIndicator(
-            onRefresh: () async => provider.init(),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              children: [
-                _Header(
-                  title: provider.settings.title,
-                  isDark: provider.isDarkMode,
-                  onToggleTheme: provider.toggleDarkMode,
-                ),
-                const SizedBox(height: 12),
-                CalendarStrip(
-                  calculator: calculator,
-                  selectedDate: _selectedDate,
-                  onDateSelected: (date) =>
-                      setState(() => _selectedDate = date),
-                ),
-                const SizedBox(height: 12),
-                DaySummaryCard(
-                  date: _selectedDate,
-                  entry: selectedEntry,
-                ),
-                const SizedBox(height: 16),
+        return DismissKeyboard(
+          child: SafeArea(
+            child: RefreshIndicator(
+              onRefresh: () async => provider.init(),
+              child: ListView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  _Header(
+                    title: provider.settings.title,
+                    isDark: provider.isDarkMode,
+                    onToggleTheme: provider.toggleDarkMode,
+                  ),
+                  const SizedBox(height: 12),
+                  MonthCalendar(
+                    calculator: calculator,
+                    selectedDate: _selectedDate,
+                    onDateSelected: (date) =>
+                        setState(() => _selectedDate = date),
+                  ),
+                  const SizedBox(height: 12),
+                  DayEditorPanel(
+                    key: ValueKey(
+                      '${GoalCalculator.dateToKey(_selectedDate)}_'
+                      '${selectedEntry.hours}_${selectedEntry.amount}_'
+                      '${selectedEntry.notes}',
+                    ),
+                    date: _selectedDate,
+                    entry: selectedEntry,
+                    onSave: (entry) =>
+                        provider.setDayData(_selectedDate, entry),
+                    onClear: () => provider.clearDay(_selectedDate),
+                  ),
+                  const SizedBox(height: 16),
                 _GoalHero(
                   title: provider.settings.title,
                   progress: progress,
@@ -96,8 +107,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 _BalanceCard(balance: balance),
                 const SizedBox(height: 16),
                 MilestoneBadgesRow(badges: badges),
-                const SizedBox(height: 16),
-                QuickAddPanel(onAdd: provider.addShiftToday),
                 const SizedBox(height: 16),
                 GridView.count(
                   crossAxisCount: 2,
@@ -141,13 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ProgressSection(calculator: calculator),
                 const SizedBox(height: 16),
                 _AdviceCard(text: calculator.generateAdvice()),
-                const SizedBox(height: 16),
-                DayList(
-                  calculator: calculator,
-                  onDayChanged: (date, entry) =>
-                      provider.setDayData(date, entry),
-                  onDayCleared: provider.clearDay,
-                ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,

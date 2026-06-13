@@ -53,37 +53,53 @@ jobs:
             exit 1
           fi
 
-          echo "Validating Info.plist..."
+          echo "=== Info.plist ==="
           plutil -lint "$APP_PATH/Info.plist"
+          plutil -p "$APP_PATH/Info.plist" | head -n 30
 
-          echo "Using app bundle: $APP_PATH"
+          if grep -q '\$(' "$APP_PATH/Info.plist"; then
+            echo "ERROR: Info.plist still has unresolved Xcode variables"
+            grep '\$(' "$APP_PATH/Info.plist" || true
+            exit 1
+          fi
+
+          EXEC_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP_PATH/Info.plist")"
+          if [ ! -f "$APP_PATH/$EXEC_NAME" ]; then
+            echo "ERROR: Executable '$EXEC_NAME' not found in app bundle"
+            ls -la "$APP_PATH"
+            exit 1
+          fi
+
+          echo "Using app bundle: $APP_PATH (executable: $EXEC_NAME)"
           rm -rf build/ios/sideload
           mkdir -p build/ios/sideload/Payload
           ditto "$APP_PATH" build/ios/sideload/Payload/Runner.app
 
-          plutil -lint build/ios/sideload/Payload/Runner.app/Info.plist
+          echo "Ad-hoc signing for AltStore..."
+          codesign --force --sign - --deep build/ios/sideload/Payload/Runner.app
+          codesign --verify --deep --strict build/ios/sideload/Payload/Runner.app
 
           mkdir -p build/ios/ipa
           (
             cd build/ios/sideload
-            zip -9yr ../ipa/goal-path-unsigned.ipa Payload
+            zip -9yr ../ipa/Plime.ipa Payload
           )
 
           echo "IPA contents:"
-          unzip -l build/ios/ipa/goal-path-unsigned.ipa | head -n 20
+          unzip -l build/ios/ipa/Plime.ipa | head -n 25
           ls -lh build/ios/ipa/
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: goal-path-ios-ipa
-          path: build/ios/ipa/goal-path-unsigned.ipa
+          name: plime-ios-ipa
+          path: build/ios/ipa/Plime.ipa
           retention-days: 30
 
       - name: Upload on release (optional)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/ios/ipa/goal-path-unsigned.ipa
+          files: build/ios/ipa/Plime.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

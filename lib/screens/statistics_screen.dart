@@ -16,6 +16,7 @@ import '../widgets/confidence_forecast_card.dart';
 import '../widgets/milestone_badges_row.dart';
 import '../widgets/period_comparison_card.dart';
 import '../widgets/what_if_simulator.dart';
+import '../widgets/ui/fb_widgets.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -41,47 +42,40 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         final forecast = _insights.confidenceForecast(calculator);
         final comparison = _insights.monthComparison(calculator);
         final numberFormat = NumberFormat.decimalPattern('ru');
-        final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            Text(
-              'Статистика',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 28,
-                  ),
+            FbSectionTitle(
+              title: 'Статистика',
+              subtitle: 'Аналитика, прогнозы и сравнение периодов',
             ),
             const SizedBox(height: 16),
-            _PeriodTabs(
+            FbSegmentedControl<StatsPeriod>(
+              items: const [
+                StatsPeriod.week,
+                StatsPeriod.month,
+                StatsPeriod.year,
+              ],
               selected: _period,
               onChanged: (p) => setState(() => _period = p),
+              labelBuilder: (p) => switch (p) {
+                StatsPeriod.week => 'Неделя',
+                StatsPeriod.month => 'Месяц',
+                StatsPeriod.year => 'Год',
+              },
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Баланс цели',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-                  BalanceRingChart(
-                    segments: balance.segments,
-                    centerValue:
-                        '${balance.overallPercent.toStringAsFixed(0)}%',
-                    centerLabel: 'общий баланс',
-                  ),
-                ],
+            FbCard(
+              title: 'Баланс цели',
+              icon: Icons.donut_large_outlined,
+              iconColor: AppColors.blue,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: BalanceRingChart(
+                segments: balance.segments,
+                centerValue:
+                    '${balance.overallPercent.toStringAsFixed(0)}%',
+                centerLabel: 'общий баланс',
               ),
             ),
             const SizedBox(height: 12),
@@ -153,26 +147,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkCard : AppColors.lightCard,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                ),
-              ),
-              child: Text(
-                _periodInsight(report),
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.4,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                ),
-              ),
+            const SizedBox(height: 12),
+            FbAlert(
+              message: _periodInsight(report),
+              icon: Icons.insights_outlined,
+              color: AppColors.primary,
             ),
           ],
         );
@@ -227,71 +206,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 }
 
-class _PeriodTabs extends StatelessWidget {
-  const _PeriodTabs({
-    required this.selected,
-    required this.onChanged,
-  });
-
-  final StatsPeriod selected;
-  final ValueChanged<StatsPeriod> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
-      ),
-      child: Row(
-        children: [
-          _tab('Неделя', StatsPeriod.week, isDark),
-          _tab('Месяц', StatsPeriod.month, isDark),
-          _tab('Год', StatsPeriod.year, isDark),
-        ],
-      ),
-    );
-  }
-
-  Widget _tab(String label, StatsPeriod period, bool isDark) {
-    final isSelected = selected == period;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onChanged(period),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.mint.withValues(alpha: isDark ? 0.2 : 0.15)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              fontSize: 13,
-              color: isSelected
-                  ? AppColors.mint
-                  : (isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _HeroCard extends StatelessWidget {
   const _HeroCard({
     required this.title,
@@ -311,74 +225,28 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return FbCard(
+      title: title,
+      subtitle: subtitle,
+      trailing: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    averageLabel,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                  ),
-                  Text(
-                    '${average.toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: accentColor,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          Text(
+            averageLabel,
+            style: Theme.of(context).textTheme.labelSmall,
           ),
-          const SizedBox(height: 16),
-          child,
+          Text(
+            '${average.toStringAsFixed(0)}%',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: accentColor,
+            ),
+          ),
         ],
       ),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: child,
     );
   }
 }
@@ -400,25 +268,13 @@ class _MiniStat extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
-      ),
+      decoration: AppDecorations.card(context, accent: color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
-            ),
+            style: Theme.of(context).textTheme.labelSmall,
           ),
           const SizedBox(height: 4),
           Text(

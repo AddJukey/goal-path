@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../models/insights_models.dart';
 import '../theme/app_theme.dart';
+import 'ui/fb_widgets.dart';
 
 class GoalAnalogiesCard extends StatelessWidget {
   const GoalAnalogiesCard({super.key, required this.analogies});
@@ -11,51 +12,33 @@ class GoalAnalogiesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final numberFormat = NumberFormat.decimalPattern('ru');
 
     if (analogies.remainingAmount <= 0) {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+    return FbCard(
+      title: 'До цели осталось…',
+      icon: Icons.flag_outlined,
+      iconColor: AppColors.purple,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      trailing: Text(
+        '${numberFormat.format(analogies.remainingAmount.floor())}₽',
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: AppColors.purple,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'До цели осталось…',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${numberFormat.format(analogies.remainingAmount.floor())}₽',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.purple,
-            ),
-          ),
-          const SizedBox(height: 14),
-          if (!analogies.hasData)
-            Text(
-              'Добавьте смены — покажем, сколько осталось в привычных единицах.',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
+      child: !analogies.hasData
+          ? FbAlert(
+              message:
+                  'Добавьте смены — покажем, сколько осталось в привычных единицах.',
+              icon: Icons.lightbulb_outline,
+              color: AppColors.mint,
             )
-          else ...[
-            Row(
+          : Row(
               children: [
                 Expanded(
                   child: _AnalogyTile(
@@ -73,16 +56,12 @@ class GoalAnalogiesCard extends StatelessWidget {
                     icon: Icons.schedule_outlined,
                     label: 'Часы',
                     value: analogies.hoursLabel,
-                    detail:
-                        '${analogies.avgRate.toStringAsFixed(0)} ₽/ч',
-                    color: AppColors.blue,
+                    detail: '${analogies.avgRate.toStringAsFixed(0)} ₽/ч',
+                    color: AppColors.primary,
                   ),
                 ),
               ],
             ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -104,47 +83,29 @@ class _AnalogyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.1 : 0.08),
-        borderRadius: BorderRadius.circular(14),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: color, size: 18),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
-            ),
-          ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 8),
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 4),
           Text(
             value,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: FontWeight.w800,
               color: color,
             ),
           ),
-          Text(
-            detail,
-            style: TextStyle(
-              fontSize: 10,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
-            ),
-          ),
+          Text(detail, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );

@@ -6,6 +6,7 @@ import '../models/day_entry.dart';
 import '../services/goal_calculator.dart';
 import '../theme/app_theme.dart';
 import 'keyboard_toolbar.dart';
+import 'ui/fb_widgets.dart';
 
 class DayEditorPanel extends StatefulWidget {
   const DayEditorPanel({
@@ -98,120 +99,79 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final today = GoalCalculator.dateOnly(DateTime.now());
     final isToday = widget.date == today;
     final dateLabel = isToday
         ? 'Сегодня, ${DateFormat('d MMMM', 'ru').format(widget.date)}'
         : DateFormat('EEEE, d MMMM', 'ru').format(widget.date);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    dateLabel,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                    ),
-                  ),
+    return FbCard(
+      title: dateLabel,
+      icon: Icons.edit_calendar_outlined,
+      iconColor: AppColors.mint,
+      trailing: _liveRate != '—'
+          ? FbBadge(label: _liveRate, color: AppColors.mint, small: true)
+          : null,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _field(
+                  label: '⏱️ Часы',
+                  controller: _hoursController,
                 ),
-                if (_liveRate != '—')
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.mint.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _liveRate,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: AppColors.mint,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _field(
-                    label: '⏱️ Часы',
-                    controller: _hoursController,
-                    isDark: isDark,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _field(
-                    label: '💰 Сумма (₽)',
-                    controller: _amountController,
-                    isDark: isDark,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '📝 Заметка',
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-            const SizedBox(height: 4),
-            TextField(
-              controller: _notesController,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              onTapOutside: (_) => KeyboardToolbarOverlay.dismiss(context),
-              decoration: const InputDecoration(
-                hintText: 'Комментарий к смене...',
-                isDense: true,
               ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                if (widget.entry.hours > 0 ||
-                    widget.entry.amount > 0 ||
-                    widget.entry.notes.isNotEmpty)
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      KeyboardToolbarOverlay.dismiss(context);
-                      await widget.onClear();
-                      _hoursController.clear();
-                      _amountController.clear();
-                      _notesController.clear();
-                      setState(() {});
-                    },
-                    icon: const Icon(Icons.delete_outline, size: 18),
-                    label: const Text('Очистить'),
-                  ),
-                const Spacer(),
-                FilledButton.icon(
-                  onPressed: _submit,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.mint,
-                    foregroundColor: const Color(0xFF0A0A0F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                  ),
-                  icon: const Icon(Icons.check),
-                  label: Text(widget.entry.isEmpty ? 'Сохранить' : 'Обновить'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _field(
+                  label: '💰 Сумма (₽)',
+                  controller: _amountController,
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('📝 Заметка', style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 4),
+          TextField(
+            controller: _notesController,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
+            onTapOutside: (_) => KeyboardToolbarOverlay.dismiss(context),
+            decoration: const InputDecoration(
+              hintText: 'Комментарий к смене...',
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              if (widget.entry.hours > 0 ||
+                  widget.entry.amount > 0 ||
+                  widget.entry.notes.isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    KeyboardToolbarOverlay.dismiss(context);
+                    await widget.onClear();
+                    _hoursController.clear();
+                    _amountController.clear();
+                    _notesController.clear();
+                    setState(() {});
+                  },
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text('Очистить'),
+                ),
+              const Spacer(),
+              FilledButton.icon(
+                onPressed: _submit,
+                icon: const Icon(Icons.check, size: 18),
+                label: Text(widget.entry.isEmpty ? 'Сохранить' : 'Обновить'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -219,7 +179,6 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
   Widget _field({
     required String label,
     required TextEditingController controller,
-    required bool isDark,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,12 +195,7 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
           ],
           onSubmitted: (_) => _submit(),
           onTapOutside: (_) => KeyboardToolbarOverlay.dismiss(context),
-          decoration: InputDecoration(
-            isDense: true,
-            hintText: '0',
-            filled: true,
-            fillColor: isDark ? AppColors.darkCardElevated : AppColors.lightBg,
-          ),
+          decoration: const InputDecoration(hintText: '0'),
         ),
       ],
     );

@@ -73,14 +73,8 @@ class _MonthCalendarState extends State<MonthCalendar> {
     final leadingEmpty = (firstOfMonth.weekday - 1) % 7;
 
     return Container(
+      decoration: AppDecorations.card(context),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
-      ),
       child: Column(
         children: [
           Row(
@@ -172,14 +166,14 @@ class _MonthCalendarState extends State<MonthCalendar> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.mint
+                        ? AppColors.primary
                         : (isToday
-                            ? AppColors.mint.withValues(alpha: 0.12)
+                            ? AppColors.primary.withValues(alpha: 0.12)
                             : Colors.transparent),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                     border: isToday && !isSelected
                         ? Border.all(
-                            color: AppColors.mint.withValues(alpha: 0.5),
+                            color: AppColors.primary.withValues(alpha: 0.45),
                           )
                         : null,
                   ),
@@ -192,7 +186,7 @@ class _MonthCalendarState extends State<MonthCalendar> {
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: isSelected
-                              ? const Color(0xFF0A0A0F)
+                              ? Colors.white
                               : (isDark
                                   ? AppColors.darkText
                                   : AppColors.lightText),
@@ -206,7 +200,7 @@ class _MonthCalendarState extends State<MonthCalendar> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: isSelected
-                                ? const Color(0xFF0A0A0F)
+                                ? Colors.white
                                 : AppColors.mint,
                           ),
                         ),

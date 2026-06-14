@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/milestone_badge.dart';
 import '../theme/app_theme.dart';
+import 'ui/fb_widgets.dart';
 
 class MilestoneBadgesRow extends StatelessWidget {
   const MilestoneBadgesRow({
@@ -13,96 +14,79 @@ class MilestoneBadgesRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final unlocked = badges.where((b) => b.unlocked).toList();
+    final unlocked = badges.where((b) => b.unlocked).length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Награды',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-            ),
-            Text(
-              '${unlocked.length}/${badges.length}',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
-            ),
-          ],
+    return FbCard(
+      title: 'Награды',
+      icon: Icons.military_tech_outlined,
+      iconColor: AppColors.october,
+      trailing: FbBadge(
+        label: '$unlocked/${badges.length}',
+        color: AppColors.mint,
+        small: true,
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: SizedBox(
+        height: 96,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: badges.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          itemBuilder: (context, index) {
+            return _BadgeTile(badge: badges[index]);
+          },
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 100,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: badges.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              return _BadgeTile(badge: badges[index], isDark: isDark);
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
 class _BadgeTile extends StatelessWidget {
-  const _BadgeTile({required this.badge, required this.isDark});
+  const _BadgeTile({required this.badge});
 
   final MilestoneBadge badge;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppDecorations.isDark(context);
     final unlocked = badge.unlocked;
 
     return Tooltip(
       message: badge.subtitle,
       child: Container(
-        width: 80,
+        width: 76,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCardElevated : AppColors.lightCard,
-          borderRadius: BorderRadius.circular(16),
+          color: dark ? AppColors.darkCardElevated : AppColors.lightInputBg,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: unlocked
                 ? badge.colors.first.withValues(alpha: 0.5)
-                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                : (dark ? AppColors.darkBorder : AppColors.lightBorder),
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                gradient: unlocked
-                    ? LinearGradient(colors: badge.colors)
-                    : null,
+                gradient:
+                    unlocked ? LinearGradient(colors: badge.colors) : null,
                 color: unlocked
                     ? null
-                    : (isDark
+                    : (dark
                         ? AppColors.darkBorder
                         : AppColors.lightBorder),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 badge.icon,
-                size: 20,
+                size: 18,
                 color: unlocked
                     ? Colors.white
-                    : (isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary),
+                    : AppColors.lightTextSecondary,
               ),
             ),
             const SizedBox(height: 6),
@@ -113,11 +97,7 @@ class _BadgeTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: unlocked
-                    ? null
-                    : (isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary),
+                color: unlocked ? null : AppColors.lightTextSecondary,
               ),
             ),
           ],

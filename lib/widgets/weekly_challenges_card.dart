@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/insights_models.dart';
 import '../theme/app_theme.dart';
+import 'ui/fb_widgets.dart';
 
 class WeeklyChallengesCard extends StatelessWidget {
   const WeeklyChallengesCard({super.key, required this.challenges});
@@ -10,30 +11,19 @@ class WeeklyChallengesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
-      ),
+    return FbCard(
+      title: 'Челленджи недели',
+      subtitle: 'Выполняй задания — получай награды',
+      icon: Icons.emoji_events_outlined,
+      iconColor: AppColors.purple,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Челленджи недели',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-          ),
-          const SizedBox(height: 12),
-          ...challenges.map((c) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _ChallengeRow(challenge: c),
-              )),
-        ],
+        children: challenges
+            .map((c) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _ChallengeRow(challenge: c),
+                ))
+            .toList(),
       ),
     );
   }
@@ -46,17 +36,19 @@ class _ChallengeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dark = AppDecorations.isDark(context);
     final percent = challenge.percent;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardElevated : AppColors.lightBg,
-        borderRadius: BorderRadius.circular(14),
+        color: dark ? AppColors.darkCardElevated : AppColors.lightInputBg,
+        borderRadius: BorderRadius.circular(8),
         border: challenge.completed
             ? Border.all(color: challenge.color.withValues(alpha: 0.5))
-            : null,
+            : Border.all(
+                color: dark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
       ),
       child: Row(
         children: [
@@ -64,8 +56,8 @@ class _ChallengeRow extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: challenge.color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              color: challenge.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               challenge.completed ? Icons.check_rounded : challenge.icon,
@@ -80,51 +72,39 @@ class _ChallengeRow extends StatelessWidget {
               children: [
                 Text(
                   challenge.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 14,
+                      ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   challenge.description,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: percent,
-                    minHeight: 5,
-                    backgroundColor: isDark
+                    minHeight: 6,
+                    backgroundColor: dark
                         ? AppColors.darkProgressBg
                         : AppColors.lightProgressBg,
-                    valueColor:
-                        AlwaysStoppedAnimation(challenge.color),
+                    valueColor: AlwaysStoppedAnimation(challenge.color),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            challenge.completed
+          FbBadge(
+            label: challenge.completed
                 ? '✓'
                 : '${(percent * 100).toStringAsFixed(0)}%',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              color: challenge.completed
-                  ? challenge.color
-                  : (isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary),
-            ),
+            color: challenge.completed
+                ? challenge.color
+                : AppColors.lightTextSecondary,
+            small: true,
           ),
         ],
       ),

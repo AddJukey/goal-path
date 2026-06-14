@@ -8,47 +8,45 @@ class StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     this.accent = AppColors.mint,
+    this.icon,
   });
 
   final String label;
   final String value;
   final Color accent;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        ),
-      ),
+      padding: const EdgeInsets.all(16),
+      decoration: AppDecorations.card(context, accent: accent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
-            ),
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 16, color: accent),
+                const SizedBox(width: 6),
+              ],
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: FontWeight.w800,
               color: accent,
+              letterSpacing: -0.5,
             ),
           ),
         ],

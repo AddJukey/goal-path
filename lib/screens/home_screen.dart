@@ -6,7 +6,6 @@ import 'package:share_plus/share_plus.dart';
 import '../providers/goal_provider.dart';
 import '../services/goal_calculator.dart';
 import '../theme/app_theme.dart';
-import '../models/balance_segment.dart';
 import '../services/badge_service.dart';
 import '../services/balance_service.dart';
 import '../services/motivation_service.dart';

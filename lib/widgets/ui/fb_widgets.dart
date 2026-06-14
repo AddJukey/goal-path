@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
+import '../../theme/app_theme.dart';
 
 /// Flowbite-style card with optional header, badge and icon.
 class FbCard extends StatelessWidget {

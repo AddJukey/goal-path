@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-import '../models/day_entry.dart';
 import '../services/goal_calculator.dart';
 import '../theme/app_theme.dart';
-import 'keyboard_toolbar.dart';
 
 class MonthCalendar extends StatefulWidget {
   const MonthCalendar({

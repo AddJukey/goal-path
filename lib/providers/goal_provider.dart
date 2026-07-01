@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../demo/demo_seed.dart';
 import '../models/day_entry.dart';
 import '../models/goal_settings.dart';
 import '../services/goal_calculator.dart';
@@ -25,11 +26,22 @@ class GoalProvider extends ChangeNotifier {
         dayData: _dayData,
       );
 
+  static const _demoMode = bool.fromEnvironment('DEMO_MODE');
+
   Future<void> init() async {
     try {
-      _settings = await _storage.loadSettings();
-      _dayData = await _storage.loadDayData();
-      _isDarkMode = await _storage.loadDarkMode();
+      if (_demoMode) {
+        _settings = DemoSeed.settings();
+        _dayData = DemoSeed.dayData();
+        _isDarkMode = true;
+        await _storage.saveSettings(_settings);
+        await _storage.saveDayData(_dayData);
+        await _storage.saveDarkMode(_isDarkMode);
+      } else {
+        _settings = await _storage.loadSettings();
+        _dayData = await _storage.loadDayData();
+        _isDarkMode = await _storage.loadDarkMode();
+      }
     } catch (e) {
       debugPrint('GoalProvider init error: $e');
     } finally {

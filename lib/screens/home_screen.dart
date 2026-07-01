@@ -33,6 +33,29 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedDate = GoalCalculator.dateOnly(DateTime.now());
   bool _settingsExpanded = false;
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    final scroll = Uri.base.queryParameters['scroll'];
+    if (scroll != null) {
+      final offset = double.tryParse(scroll) ?? 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(offset);
+          }
+        });
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.primary,
               onRefresh: () async => provider.init(),
               child: ListView(
+                controller: _scrollController,
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

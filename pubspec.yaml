@@ -1,7 +1,7 @@
 name: goal_path
 description: Трекер целей — отмечай смены, следи за прогрессом.
 publish_to: 'none'
-version: 1.2.0+6
+version: 1.2.0+7
 
 environment:
   sdk: '>=3.2.0 <4.0.0'

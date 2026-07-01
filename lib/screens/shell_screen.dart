@@ -14,7 +14,14 @@ class ShellScreen extends StatefulWidget {
 }
 
 class _ShellScreenState extends State<ShellScreen> {
-  int _index = 0;
+  late int _index;
+
+  @override
+  void initState() {
+    super.initState();
+    final tab = Uri.base.queryParameters['tab'];
+    _index = (tab == 'stats' || tab == '1') ? 1 : 0;
+  }
 
   @override
   Widget build(BuildContext context) {

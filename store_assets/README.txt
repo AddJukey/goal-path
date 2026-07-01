@@ -1,30 +1,30 @@
 Plime — материалы для RuStore / магазинов
 ==========================================
 
-ЛОГОТИП RuStore (1:1, сторона 32–512 px, до 1 MB)
-  store_assets/rustore-logo-512.png   — 512×512, копия иконки из APK
-  ВАЖНО: должен совпадать с иконкой в APK! После смены иконки:
-    dart run flutter_launcher_icons
-    .\store_assets\sync-rustore-logo.ps1
-  Загружайте в RuStore ТОЛЬКО этот файл, не другую картинку.
+ЛОГОТИП RuStore (1:1, 512×512, до 1 MB)
+  store_assets/rustore-logo-512.png
+  assets/icon/app_icon.png — тот же файл для APK/IPA
 
-ИКОНКА приложения (в APK/IPA)
-  assets/icon/app_icon.png          — исходник 1024×1024
-  После `dart run flutter_launcher_icons` иконки появятся в android/ и ios/
+  Пересоздать логотип:
+    python tool/generate_logo.py
+    (или положить свой 512×512 PNG в assets/icon/app_icon.png)
+    dart run flutter_launcher_icons
+    python tool/sync_rustore_logo.py
 
 СКРИНШОТЫ (store_assets/screenshots/)
-  1. plime-screenshot-1-today.png   — вкладка «Сегодня», календарь, смена
-  2. plime-screenshot-2-stats.png   — вкладка «Статистика», графики
-  3. plime-screenshot-3-goals.png   — цель, серии, челленджи
+  Реальные скрины из приложения (не AI):
+  1. plime-screenshot-1-today.png      — вкладка «Сегодня»
+  2. plime-screenshot-2-motivation.png — цель, серии, челленджи
+  3. plime-screenshot-3-stats.png       — вкладка «Статистика»
 
-RuStore (Android):
-  • Минимум 2 скриншота, рекомендуется 4–8
-  • Соотношение 9:16 или 9:19.5, от 720 px по короткой стороне
-  • Формат PNG или JPEG
+  Пересоздать скрины:
+    flutter build web --dart-define=DEMO_MODE=true --release
+    cd build/web && python -m http.server 8765
+    python tool/capture_screenshots.py
 
-Совет: для публикации лучше заменить на реальные скрины с телефона
-(Настройки → сделать скриншот в приложении). Сгенерированные — для черновика.
+  Размер: 1170×2532 (9:19.5), подходит для RuStore.
 
-Генерация иконок на проекте:
-  flutter pub get
-  dart run flutter_launcher_icons
+RuStore:
+  • Логотип: rustore-logo-512.png
+  • Минимум 2 скриншота, рекомендуется 3–5
+  • APK с новой иконкой из GitHub Actions

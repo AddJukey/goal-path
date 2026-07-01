@@ -15,6 +15,7 @@ import '../widgets/goal_settings_panel.dart';
 import '../widgets/goal_analogies_card.dart';
 import '../widgets/keyboard_toolbar.dart';
 import '../widgets/milestone_badges_row.dart';
+import '../widgets/motivation_pace_card.dart';
 import '../widgets/month_calendar.dart';
 import '../widgets/progress_section.dart';
 import '../widgets/stat_card.dart';
@@ -51,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final planStreak = motivation.planStreak(calculator);
         final challenges = motivation.weeklyChallenges(calculator);
         final analogies = motivation.goalAnalogies(calculator);
+        final pace = motivation.paceMotivation(calculator);
         final selectedEntry = calculator.getDayData(_selectedDate);
         final unlockedBadges =
             badges.where((b) => b.unlocked).length.toString();
@@ -145,6 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   WeeklyChallengesCard(challenges: challenges),
                   const SizedBox(height: 12),
                   GoalAnalogiesCard(analogies: analogies),
+                  const SizedBox(height: 12),
+                  MotivationPaceCard(pace: pace),
                   const SizedBox(height: 12),
                   MilestoneBadgesRow(badges: badges),
                   const SizedBox(height: 12),

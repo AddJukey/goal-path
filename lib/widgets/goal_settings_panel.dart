@@ -82,6 +82,34 @@ class _GoalSettingsPanelState extends State<GoalSettingsPanel> {
     }
   }
 
+  Future<void> _pickStartDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: widget.settings.startDate,
+      firstDate: DateTime(now.year - 5),
+      lastDate: now,
+      locale: const Locale('ru'),
+      helpText: 'Когда начали копить?',
+    );
+    if (picked != null) {
+      final start = DateTime(picked.year, picked.month, picked.day);
+      var settings = widget.settings.copyWith(startDate: start);
+      if (settings.deadline.isBefore(start)) {
+        settings = settings.copyWith(
+          deadline: DateTime(start.year, start.month + 6, start.day, 23, 59, 59),
+        );
+      }
+      widget.onChanged(settings);
+    }
+  }
+
+  int get _daysSaving {
+    final start = GoalCalculator.dateOnly(widget.settings.startDate);
+    final today = GoalCalculator.dateOnly(DateTime.now());
+    return today.difference(start).inDays + 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final countdown = widget.calculator.timeUntilDeadline;
@@ -90,6 +118,8 @@ class _GoalSettingsPanelState extends State<GoalSettingsPanel> {
         : widget.calculator.formatDeadlineCountdown(countdown);
     final deadlineFormatted =
         DateFormat('dd.MM.yyyy').format(widget.settings.deadline);
+    final startFormatted =
+        DateFormat('dd.MM.yyyy').format(widget.settings.startDate);
 
     return Card(
       child: Padding(
@@ -124,6 +154,15 @@ class _GoalSettingsPanelState extends State<GoalSettingsPanel> {
                 decoration: const InputDecoration(isDense: true),
               ),
               width: 140,
+            ),
+            _field(
+              label: '📆 Начал копить ($startFormatted)',
+              child: OutlinedButton.icon(
+                onPressed: _pickStartDate,
+                icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                label: Text('$_daysSaving дн.'),
+              ),
+              width: 180,
             ),
             _field(
               label: '📅 Дедлайн ($deadlineFormatted)',

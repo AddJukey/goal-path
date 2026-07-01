@@ -192,3 +192,33 @@ class PeriodComparison {
   final List<PeriodMetricDelta> metrics;
   final bool hasPreviousData;
 }
+
+class PaceScenario {
+  const PaceScenario({
+    required this.title,
+    required this.subtitle,
+    required this.dateLabel,
+    required this.dailyAmount,
+    required this.color,
+    required this.isBoost,
+  });
+
+  final String title;
+  final String subtitle;
+  final String dateLabel;
+  final double dailyAmount;
+  final Color color;
+  final bool isBoost;
+}
+
+class PaceMotivation {
+  const PaceMotivation({
+    required this.scenarios,
+    required this.hasData,
+    required this.deadlineLabel,
+  });
+
+  final List<PaceScenario> scenarios;
+  final bool hasData;
+  final String deadlineLabel;
+}

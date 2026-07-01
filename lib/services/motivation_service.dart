@@ -99,7 +99,9 @@ class MotivationService {
     final weekEnd = weekStart.add(const Duration(days: 6));
 
     final weekAmount = _sumAmount(calculator, weekStart, weekEnd);
+    final weekHours = _sumHours(calculator, weekStart, weekEnd);
     final weekActiveDays = _countActiveDays(calculator, weekStart, weekEnd);
+    final planDaysThisWeek = _countPlanDays(calculator, weekStart, weekEnd);
     final currentShiftStreak = _streak(
       calculator,
       type: StreakType.shifts,
@@ -125,6 +127,11 @@ class MotivationService {
     final earnTarget = remaining > 0
         ? weeklyTarget.toDouble()
         : fallbackTarget.clamp(5000.0, double.infinity).toDouble();
+
+    final lastWeekAmount = _lastWeekAmount(calculator, weekStart);
+    final boostTarget = lastWeekAmount > 0
+        ? lastWeekAmount * 1.15
+        : earnTarget * 1.15;
 
     return [
       WeeklyChallenge(
@@ -158,7 +165,182 @@ class MotivationService {
         icon: Icons.calendar_month_outlined,
         color: AppColors.purple,
       ),
+      WeeklyChallenge(
+        id: 'weekly_hours',
+        title: '20 часов за неделю',
+        description: 'Набери 20 ч до конца недели',
+        target: 20,
+        progress: weekHours,
+        completed: weekHours >= 20,
+        icon: Icons.access_time_rounded,
+        color: AppColors.primary,
+      ),
+      WeeklyChallenge(
+        id: 'weekly_plan',
+        title: '3 дня по плану',
+        description: 'Выполни дневной план 3 раза',
+        target: 3,
+        progress: planDaysThisWeek.toDouble(),
+        completed: planDaysThisWeek >= 3,
+        icon: Icons.verified_outlined,
+        color: AppColors.mintDark,
+      ),
+      WeeklyChallenge(
+        id: 'weekly_boost',
+        title: 'Ускорение',
+        description: lastWeekAmount > 0
+            ? 'На 15% больше прошлой недели (${boostTarget.toStringAsFixed(0)}₽)'
+            : 'Заработай ${boostTarget.toStringAsFixed(0)}₽ за неделю',
+        target: boostTarget,
+        progress: weekAmount,
+        completed: weekAmount >= boostTarget && boostTarget > 0,
+        icon: Icons.rocket_launch_outlined,
+        color: AppColors.october,
+      ),
     ];
+  }
+
+  PaceMotivation paceMotivation(GoalCalculator calculator) {
+    final remaining = calculator.remainingTarget;
+    final deadlineDays = calculator.remainingDays.length;
+    final deadlineLabel = DateFormat('d MMMM yyyy', 'ru')
+        .format(calculator.settings.deadline);
+
+    if (remaining <= 0) {
+      return PaceMotivation(
+        hasData: true,
+        deadlineLabel: deadlineLabel,
+        scenarios: const [
+          PaceScenario(
+            title: 'Цель достигнута',
+            subtitle: 'Поздравляем!',
+            dateLabel: '✅ Готово',
+            dailyAmount: 0,
+            color: AppColors.mint,
+            isBoost: true,
+          ),
+        ],
+      );
+    }
+
+    final last7 = calculator.last7DaysStats;
+    final currentDaily = last7.amount > 0 ? last7.amount / 7 : 0.0;
+
+    if (currentDaily <= 0) {
+      return PaceMotivation(
+        hasData: false,
+        deadlineLabel: deadlineLabel,
+        scenarios: const [],
+      );
+    }
+
+    final boostDaily = currentDaily * 1.25;
+    final slackDaily = currentDaily * 0.6;
+
+    return PaceMotivation(
+      hasData: true,
+      deadlineLabel: deadlineLabel,
+      scenarios: [
+        _paceScenario(
+          remaining: remaining,
+          title: 'Текущий темп',
+          subtitle:
+              '~${currentDaily.toStringAsFixed(0)}₽/день — как сейчас',
+          daily: currentDaily,
+          deadlineDays: deadlineDays,
+          color: AppColors.blue,
+          isBoost: false,
+        ),
+        _paceScenario(
+          remaining: remaining,
+          title: 'Если усилиться на 25%',
+          subtitle:
+              '~${boostDaily.toStringAsFixed(0)}₽/день — чуть больше усилий',
+          daily: boostDaily,
+          deadlineDays: deadlineDays,
+          color: AppColors.mint,
+          isBoost: true,
+        ),
+        _paceScenario(
+          remaining: remaining,
+          title: 'Если «халтурить» (−40%)',
+          subtitle:
+              '~${slackDaily.toStringAsFixed(0)}₽/день — меньше смен и часов',
+          daily: slackDaily,
+          deadlineDays: deadlineDays,
+          color: AppColors.rose,
+          isBoost: false,
+        ),
+      ],
+    );
+  }
+
+  PaceScenario _paceScenario({
+    required double remaining,
+    required String title,
+    required String subtitle,
+    required double daily,
+    required int deadlineDays,
+    required Color color,
+    required bool isBoost,
+  }) {
+    return PaceScenario(
+      title: title,
+      subtitle: subtitle,
+      dateLabel: _dateLabelForDaily(remaining, daily, deadlineDays),
+      dailyAmount: daily,
+      color: color,
+      isBoost: isBoost,
+    );
+  }
+
+  String _dateLabelForDaily(
+    double remaining,
+    double daily,
+    int deadlineDays,
+  ) {
+    if (daily <= 0) return 'нет данных';
+    final daysNeeded = remaining / daily;
+    if (daysNeeded > deadlineDays) {
+      final over = (daysNeeded - deadlineDays).ceil();
+      return 'после дедлайна (+$over дн.)';
+    }
+    final date = DateTime.now().add(Duration(days: daysNeeded.ceil()));
+    return DateFormat('d MMM yyyy', 'ru').format(date);
+  }
+
+  double _lastWeekAmount(GoalCalculator calculator, DateTime thisWeekStart) {
+    final lastStart = thisWeekStart.subtract(const Duration(days: 7));
+    final lastEnd = thisWeekStart.subtract(const Duration(days: 1));
+    return _sumAmount(calculator, lastStart, lastEnd);
+  }
+
+  int _countPlanDays(
+    GoalCalculator calculator,
+    DateTime start,
+    DateTime end,
+  ) {
+    var count = 0;
+    var cursor = start;
+    while (!cursor.isAfter(end)) {
+      if (_stats.isDailyPlanMet(calculator, cursor)) count++;
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    return count;
+  }
+
+  double _sumHours(
+    GoalCalculator calculator,
+    DateTime start,
+    DateTime end,
+  ) {
+    var total = 0.0;
+    var cursor = start;
+    while (!cursor.isAfter(end)) {
+      total += calculator.getDayData(cursor).hours;
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    return total;
   }
 
   GoalAnalogies goalAnalogies(GoalCalculator calculator) {

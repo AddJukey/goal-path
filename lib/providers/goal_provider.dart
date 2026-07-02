@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../demo/demo_seed.dart';
+import '../models/app_preferences.dart';
 import '../models/day_entry.dart';
 import '../models/goal_settings.dart';
 import '../services/goal_calculator.dart';
@@ -13,11 +14,13 @@ class GoalProvider extends ChangeNotifier {
 
   GoalSettings _settings = GoalSettings.defaults();
   Map<String, DayEntry> _dayData = {};
+  AppPreferences _appPreferences = const AppPreferences();
   bool _isDarkMode = true;
   bool _isLoading = true;
 
   GoalSettings get settings => _settings;
   Map<String, DayEntry> get dayData => Map.unmodifiable(_dayData);
+  AppPreferences get appPreferences => _appPreferences;
   bool get isDarkMode => _isDarkMode;
   bool get isLoading => _isLoading;
 
@@ -41,6 +44,7 @@ class GoalProvider extends ChangeNotifier {
         _settings = await _storage.loadSettings();
         _dayData = await _storage.loadDayData();
         _isDarkMode = await _storage.loadDarkMode();
+        _appPreferences = await _storage.loadAppPreferences();
       }
     } catch (e) {
       debugPrint('GoalProvider init error: $e');
@@ -56,12 +60,18 @@ class GoalProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateAppPreferences(AppPreferences prefs) async {
+    _appPreferences = prefs;
+    await _storage.saveAppPreferences(_appPreferences);
+    notifyListeners();
+  }
+
   Future<void> setDayData(DateTime date, DayEntry entry) async {
     final key = GoalCalculator.dateToKey(date);
     final hours = entry.hours.clamp(0.0, double.infinity).toDouble();
     final amount = entry.amount.clamp(0.0, double.infinity).toDouble();
 
-    if (hours == 0 && amount == 0 && entry.notes.isEmpty) {
+    if (entry.isEmpty) {
       _dayData.remove(key);
     } else {
       _dayData[key] = entry.copyWith(hours: hours, amount: amount);
@@ -79,6 +89,8 @@ class GoalProvider extends ChangeNotifier {
     required double hours,
     required double amount,
     String notes = '',
+    int? mood,
+    int? energy,
   }) async {
     if (hours == 0 && amount == 0) return;
 
@@ -87,10 +99,12 @@ class GoalProvider extends ChangeNotifier {
 
     await setDayData(
       today,
-      DayEntry(
+      existing.copyWith(
         hours: existing.hours + hours,
         amount: existing.amount + amount,
         notes: notes.isNotEmpty ? notes : existing.notes,
+        mood: mood ?? existing.mood,
+        energy: energy ?? existing.energy,
       ),
     );
   }

@@ -38,8 +38,30 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Configure release signing
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          cat > android/key.properties << EOF
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=app/upload-keystore.jks
+          EOF
+
+      - name: Warn if release keystore is missing
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
+        run: |
+          echo "::warning::APK will be signed with DEBUG key. RuStore updates require the same key as version 4."
+          echo "Add GitHub secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD"
+
       - name: Build release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=AI_WORKER_URL=https://plime-ai-coach.plimeam.workers.dev
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

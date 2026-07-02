@@ -1,0 +1,6 @@
+# Скопируй в key.properties и заполни (key.properties в .gitignore).
+# Используй ТОТ ЖЕ keystore, которым подписана версия 4 в RuStore.
+storePassword=ВАШ_ПАРОЛЬ_ХРАНИЛИЩА
+keyPassword=ВАШ_ПАРОЛЬ_КЛЮЧА
+keyAlias=upload
+storeFile=app/upload-keystore.jks

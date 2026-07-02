@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/app_preferences.dart';
 import '../models/day_entry.dart';
 import '../models/goal_settings.dart';
 
@@ -9,6 +10,7 @@ class StorageService {
   static const _dayDataKey = 'goal_path_day_data';
   static const _settingsKey = 'goal_path_settings';
   static const _darkModeKey = 'goal_path_dark_mode';
+  static const _prefsKey = 'goal_path_app_prefs';
 
   Future<Map<String, DayEntry>> loadDayData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -61,5 +63,23 @@ class StorageService {
   Future<void> saveDarkMode(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_darkModeKey, value);
+  }
+
+  Future<AppPreferences> loadAppPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_prefsKey);
+    if (raw == null) return const AppPreferences();
+    try {
+      return AppPreferences.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      return const AppPreferences();
+    }
+  }
+
+  Future<void> saveAppPreferences(AppPreferences value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKey, jsonEncode(value.toJson()));
   }
 }

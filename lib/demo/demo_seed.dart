@@ -18,33 +18,43 @@ class DemoSeed {
     final now = GoalCalculator.dateOnly(DateTime.now());
     final data = <String, DayEntry>{};
 
-    void add(int daysAgo, double hours, double amount, [String notes = '']) {
+    void add(
+      int daysAgo,
+      double hours,
+      double amount, [
+      String notes = '',
+      int? mood,
+      int? energy,
+    ]) {
       final date = now.subtract(Duration(days: daysAgo));
       data[GoalCalculator.dateToKey(date)] = DayEntry(
         hours: hours,
         amount: amount,
         notes: notes,
+        mood: mood,
+        energy: energy,
       );
     }
 
-    add(0, 6, 3500, 'Хорошая смена');
-    add(1, 5.5, 3200);
+    add(0, 6, 3500, 'Хорошая смена', 4, 4);
+    add(1, 5.5, 3200, '', 3, 3);
     add(2, 0, 0);
-    add(3, 7, 4100);
-    add(4, 6, 3600);
-    add(5, 4, 2400);
-    add(6, 8, 4800, 'Много заказов');
-    add(7, 6, 3500);
-    add(8, 5, 2900);
+    add(3, 7, 4100, '', 5, 4);
+    add(4, 6, 3600, '', 4, 3);
+    add(5, 4, 2400, '', 2, 2);
+    add(6, 8, 4800, 'Много заказов', 5, 5);
+    add(7, 6, 3500, '', 4, 4);
+    add(8, 5, 2900, '', 3, 2);
     add(9, 0, 0);
-    add(10, 6.5, 3800);
-    add(11, 7, 4200);
-    add(12, 5, 3000);
-    add(13, 6, 3400);
-    add(14, 8, 4600);
+    add(10, 6.5, 3800, '', 4, 4);
+    add(11, 7, 4200, '', 5, 4);
+    add(12, 5, 3000, '', 3, 3);
+    add(13, 6, 3400, '', 4, 3);
+    add(14, 8, 4600, '', 5, 5);
 
     for (var i = 15; i <= 40; i += 2) {
-      add(i, 5 + (i % 3), 2500 + (i * 40.0));
+      final mood = 2 + (i % 4);
+      add(i, 5 + (i % 3), 2500 + (i * 40.0), '', mood, mood);
     }
 
     return data;

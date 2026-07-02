@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 
 import '../models/day_entry.dart';
 import '../services/goal_calculator.dart';
+import '../services/voice_input_service.dart';
 import '../theme/app_theme.dart';
 import 'keyboard_toolbar.dart';
+import 'mood_energy_picker.dart';
 import 'ui/fb_widgets.dart';
 
 class DayEditorPanel extends StatefulWidget {
@@ -15,12 +17,14 @@ class DayEditorPanel extends StatefulWidget {
     required this.entry,
     required this.onSave,
     required this.onClear,
+    this.onShiftSaved,
   });
 
   final DateTime date;
   final DayEntry entry;
   final Future<void> Function(DayEntry entry) onSave;
   final Future<void> Function() onClear;
+  final Future<void> Function(DayEntry entry)? onShiftSaved;
 
   @override
   State<DayEditorPanel> createState() => _DayEditorPanelState();
@@ -30,6 +34,10 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
   late final TextEditingController _hoursController;
   late final TextEditingController _amountController;
   late final TextEditingController _notesController;
+  final _voice = VoiceInputService();
+  int? _mood;
+  int? _energy;
+  var _voiceBusy = false;
 
   @override
   void initState() {
@@ -57,6 +65,8 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
     _amountController.text =
         widget.entry.amount > 0 ? widget.entry.amount.toStringAsFixed(0) : '';
     _notesController.text = widget.entry.notes;
+    _mood = widget.entry.mood;
+    _energy = widget.entry.energy;
   }
 
   void _onFieldChanged() => setState(() {});
@@ -72,21 +82,52 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
     return '${(_parsedAmount / _parsedHours).toStringAsFixed(0)} ₽/ч';
   }
 
+  DayEntry _buildEntry() {
+    return DayEntry(
+      hours: _parsedHours,
+      amount: _parsedAmount,
+      notes: _notesController.text.trim(),
+      mood: _mood,
+      energy: _energy,
+    );
+  }
+
   Future<void> _submit() async {
     KeyboardToolbarOverlay.dismiss(context);
 
-    final hours = _parsedHours;
-    final amount = _parsedAmount;
-    final notes = _notesController.text.trim();
+    final entry = _buildEntry();
 
-    if (hours == 0 && amount == 0 && notes.isEmpty) {
+    if (entry.isEmpty) {
       await widget.onClear();
       return;
     }
 
-    await widget.onSave(
-      DayEntry(hours: hours, amount: amount, notes: notes),
-    );
+    await widget.onSave(entry);
+    await widget.onShiftSaved?.call(entry);
+  }
+
+  Future<void> _voiceInput() async {
+    setState(() => _voiceBusy = true);
+    try {
+      final text = await _voice.listen();
+      if (!mounted || text == null) return;
+      final parsed = VoiceShiftParser.parse(text);
+      if (parsed == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Не распознано: $text')),
+        );
+        return;
+      }
+      if (parsed.hours > 0) {
+        _hoursController.text = parsed.hours.toString();
+      }
+      if (parsed.amount > 0) {
+        _amountController.text = parsed.amount.toStringAsFixed(0);
+      }
+      setState(() {});
+    } finally {
+      if (mounted) setState(() => _voiceBusy = false);
+    }
   }
 
   @override
@@ -94,6 +135,7 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
     _hoursController.dispose();
     _amountController.dispose();
     _notesController.dispose();
+    _voice.dispose();
     super.dispose();
   }
 
@@ -133,6 +175,28 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: _voiceBusy ? null : _voiceInput,
+              icon: _voiceBusy
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.mic_none_rounded, size: 18),
+              label: const Text('Голосом'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          MoodEnergyPicker(
+            mood: _mood,
+            energy: _energy,
+            onMoodChanged: (v) => setState(() => _mood = v),
+            onEnergyChanged: (v) => setState(() => _energy = v),
+          ),
           const SizedBox(height: 12),
           Text('📝 Заметка', style: Theme.of(context).textTheme.labelSmall),
           const SizedBox(height: 4),
@@ -148,9 +212,7 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
           const SizedBox(height: 14),
           Row(
             children: [
-              if (widget.entry.hours > 0 ||
-                  widget.entry.amount > 0 ||
-                  widget.entry.notes.isNotEmpty)
+              if (!widget.entry.isEmpty)
                 OutlinedButton.icon(
                   onPressed: () async {
                     KeyboardToolbarOverlay.dismiss(context);
@@ -158,7 +220,10 @@ class _DayEditorPanelState extends State<DayEditorPanel> {
                     _hoursController.clear();
                     _amountController.clear();
                     _notesController.clear();
-                    setState(() {});
+                    setState(() {
+                      _mood = null;
+                      _energy = null;
+                    });
                   },
                   icon: const Icon(Icons.delete_outline, size: 18),
                   label: const Text('Очистить'),

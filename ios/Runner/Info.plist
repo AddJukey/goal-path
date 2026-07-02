@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Микрофон нужен для голосового ввода часов и суммы смены.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Распознавание речи для быстрого ввода смены.</string>
 </dict>
 </plist>

@@ -7,24 +7,30 @@ Plime — материалы для RuStore / магазинов
 
   Пересоздать логотип:
     python tool/generate_logo.py
-    (или положить свой 512×512 PNG в assets/icon/app_icon.png)
     dart run flutter_launcher_icons
-    python tool/sync_rustore_logo.py
+    powershell store_assets/sync-rustore-logo.ps1
 
-СКРИНШОТЫ (store_assets/screenshots/)
-  Реальные скрины из приложения (не AI):
-  1. plime-screenshot-1-today.png      — вкладка «Сегодня»
-  2. plime-screenshot-2-motivation.png — цель, серии, челленджи
-  3. plime-screenshot-3-stats.png       — вкладка «Статистика»
+СКРИНШОТЫ ДЛЯ ВИТРИНЫ (store_assets/screenshots/)
+  Маркетинговые скрины в стиле App Store (реальный UI + заголовки):
+  1. plime-screenshot-1-today.png       — «Копи на свою мечту»
+  2. plime-screenshot-2-progress.png    — «Отмечай каждую смену»
+  3. plime-screenshot-3-motivation.png  — «Не теряй мотивацию»
+  4. plime-screenshot-4-stats.png        — «Видь полную картину»
+  5. plime-screenshot-5-badges.png      — «Получай награды»
 
-  Пересоздать скрины:
+  Исходники и превью:
+    screenshots/raw/         — сырые кадры из приложения
+    screenshots/marketing/   — финальные PNG + showcase.png
+
+  Размер финалов: 1920×1080 (ландшафт, Full HD).
+
+  Пересоздать весь набор:
     flutter build web --dart-define=DEMO_MODE=true --release
     cd build/web && python -m http.server 8765
     python tool/capture_screenshots.py
-
-  Размер: 1170×2532 (9:19.5), подходит для RuStore.
+    python tool/render_landscape_screenshots.py
 
 RuStore:
   • Логотип: rustore-logo-512.png
-  • Минимум 2 скриншота, рекомендуется 3–5
+  • 5 скриншотов из screenshots/
   • APK с новой иконкой из GitHub Actions

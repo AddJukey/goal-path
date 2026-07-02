@@ -3,13 +3,18 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../models/day_entry.dart';
 import '../providers/goal_provider.dart';
 import '../services/goal_calculator.dart';
 import '../theme/app_theme.dart';
 import '../services/badge_service.dart';
 import '../services/balance_service.dart';
 import '../services/motivation_service.dart';
+import '../services/coach_service.dart';
+import '../services/situation_detector.dart';
+import '../widgets/ai_coach_section.dart';
 import '../widgets/balance_ring_chart.dart';
+import '../widgets/coach_settings_panel.dart';
 import '../widgets/day_editor_panel.dart';
 import '../widgets/goal_settings_panel.dart';
 import '../widgets/goal_analogies_card.dart';
@@ -20,6 +25,7 @@ import '../widgets/month_calendar.dart';
 import '../widgets/progress_section.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/streak_card.dart';
+import '../widgets/shift_saved_sheet.dart';
 import '../widgets/weekly_challenges_card.dart';
 import '../widgets/ui/fb_widgets.dart';
 
@@ -33,7 +39,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedDate = GoalCalculator.dateOnly(DateTime.now());
   bool _settingsExpanded = false;
+  bool _coachSettingsExpanded = false;
   final _scrollController = ScrollController();
+  final _coach = CoachService();
+  final _detector = SituationDetector();
 
   @override
   void initState() {
@@ -109,14 +118,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     key: ValueKey(
                       '${GoalCalculator.dateToKey(_selectedDate)}_'
                       '${selectedEntry.hours}_${selectedEntry.amount}_'
-                      '${selectedEntry.notes}',
+                      '${selectedEntry.notes}_${selectedEntry.mood}_'
+                      '${selectedEntry.energy}',
                     ),
                     date: _selectedDate,
                     entry: selectedEntry,
                     onSave: (entry) =>
                         provider.setDayData(_selectedDate, entry),
                     onClear: () => provider.clearDay(_selectedDate),
+                    onShiftSaved: (entry) => _onShiftSaved(context, provider, entry),
                   ),
+                  const SizedBox(height: 12),
+                  const AiCoachSection(),
                   const SizedBox(height: 16),
                   GridView.count(
                     crossAxisCount: 2,
@@ -197,6 +210,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 12),
                   ProgressSection(calculator: calculator),
                   const SizedBox(height: 12),
+                  _CoachSettingsExpansion(
+                    expanded: _coachSettingsExpanded,
+                    onToggle: () => setState(
+                      () => _coachSettingsExpanded = !_coachSettingsExpanded,
+                    ),
+                    child: CoachSettingsPanel(
+                      prefs: provider.appPreferences,
+                      onChanged: provider.updateAppPreferences,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   _SettingsExpansion(
                     expanded: _settingsExpanded,
                     onToggle: () =>
@@ -231,6 +255,17 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
+  Future<void> _onShiftSaved(
+    BuildContext context,
+    GoalProvider provider,
+    DayEntry entry,
+  ) async {
+    if (entry.hours <= 0 && entry.amount <= 0) return;
+    final ctx = _detector.buildShiftSaved(provider.calculator, entry);
+    final future = _coach.quoteAfterShift(ctx, provider.appPreferences);
+    await ShiftSavedSheet.show(context, messageFuture: future);
   }
 
   Future<void> _confirmClearAll(
@@ -369,6 +404,39 @@ class _GoalHero extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CoachSettingsExpansion extends StatelessWidget {
+  const _CoachSettingsExpansion({
+    required this.expanded,
+    required this.onToggle,
+    required this.child,
+  });
+
+  final bool expanded;
+  final VoidCallback onToggle;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: AppDecorations.card(context),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.auto_awesome, color: AppColors.october),
+            title: const Text('Plime Coach и фокус'),
+            trailing: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+            onTap: onToggle,
+          ),
+          if (expanded) ...[
+            const Divider(height: 1),
+            Padding(padding: const EdgeInsets.all(12), child: child),
+          ],
+        ],
+      ),
     );
   }
 }

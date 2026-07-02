@@ -14,6 +14,7 @@ import '../widgets/balance_ring_chart.dart';
 import '../widgets/best_day_card.dart';
 import '../widgets/confidence_forecast_card.dart';
 import '../widgets/milestone_badges_row.dart';
+import '../widgets/mood_insight_section.dart';
 import '../widgets/period_comparison_card.dart';
 import '../widgets/what_if_simulator.dart';
 import '../widgets/ui/fb_widgets.dart';
@@ -29,6 +30,29 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   StatsPeriod _period = StatsPeriod.month;
   final _stats = StatisticsService();
   final _insights = InsightsService();
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    final scroll = Uri.base.queryParameters['scroll'];
+    if (scroll != null) {
+      final offset = double.tryParse(scroll) ?? 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(offset);
+          }
+        });
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +68,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         final numberFormat = NumberFormat.decimalPattern('ru');
 
         return ListView(
+          controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             FbSectionTitle(
@@ -66,6 +91,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               },
             ),
             const SizedBox(height: 16),
+            const MoodInsightSection(),
             FbCard(
               title: 'Баланс цели',
               icon: Icons.donut_large_outlined,

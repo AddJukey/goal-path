@@ -19,6 +19,9 @@ Thumbs.db
 
 test_app/
 
+# Cloudflare Wrangler local cache
+cloudflare/.wrangler/
+
 # Signing (never commit)
 *.p12
 *.mobileprovision
